@@ -58,3 +58,55 @@ Declared in `syslib/builtin.mil`, implemented in `native.c` (in
 
 Moving these out of minilang and into C shrinks the compiled `.milc` image
 (no Newton-loop bytecode for `sqrt`, for example).
+
+## User C extensions (LLVM backend) + OpaqueType
+
+The C boot VM (`minilang run`) only knows the built-in natives above. For your
+own C code, compile a native executable and link extra C sources with:
+
+```bash
+minilang build -e prog.mil myext.c        # or: main build -e prog.mil myext.c
+```
+
+Declare the functions in the `.mil` program:
+
+```minilang
+native func my_open(path);     // -> opaque handle
+native func my_read(handle);   // -> int
+```
+
+and implement each as `Value ml_native_<name>(Value ...)` — base name, no
+module prefix — in `myext.c`, including the public API header
+[`minilang_runtime.h`](https://github.com/HFunction2013/minilang-boot/blob/main/minilang_runtime.h):
+
+```c
+#include "minilang_runtime.h"   // -I points at the runtime dir automatically
+
+Value ml_native_my_open(Value path) {
+    FILE *f = fopen(ml_cstr(path), "r");
+    return ml_opaque_create(f);            // wrap a C pointer (TAG_OPAQUE)
+}
+
+Value ml_native_my_read(Value handle) {
+    FILE *f = (FILE *)ml_opaque_ptr(handle);  // unwrap, errors if not opaque
+    return ml_mkint(f ? fgetc(f) : -1);
+}
+```
+
+### OpaqueType
+
+`ml_opaque_create(ptr)` / `ml_opaque_ptr(v)` wrap and unwrap an arbitrary C
+pointer (`FILE*`, buffers, structs) as a minilang `Value` (tag `4`). minilang
+cannot inspect the payload; it only:
+
+- stores / passes the value (variables, args, arrays),
+- compares by pointer identity (`==` / `!=`),
+- treats non-NULL as truthy in `if`,
+- prints it as `<opaque>`.
+
+Other helpers for extensions: `ml_cstr`, `ml_int`, `ml_mkint`, `ml_mkstr`.
+The build links `runtime.c` plus every `.c` given on the command line; extra
+flags/compiler can be injected via `LLVM_LINKER`. See
+`tests/ext/` (`file_counter.c` + `opaque_test.mil`) and `ext_test.sh` in
+[`minilang-compiler`](https://github.com/HFunction2013/minilang-compiler) for a
+working example.

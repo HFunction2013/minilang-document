@@ -57,6 +57,7 @@ minilang dump-text <file>   # MINILANGBC text form
 minilang llvm <file>         # emit .ll
 minilang build -b <file>     # write .milc
 minilang build -e <file>     # write native executable
+minilang build -e <file> ext.c  # ... linking a user C extension
 minilang repl                # interactive REPL
 minilang self-test           # self-host check
 ```
