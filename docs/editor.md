@@ -17,7 +17,10 @@ LSP server (stdio). The extension launches it automatically:
 - **Diagnostics** — shells out to the `minilang` toolchain and maps
   `Parse error line N` / `Compile error` to squiggles as you type.
 - **Hover** — docs for built-ins, syslib functions and C-native methods.
-- **Completion** — built-ins, `math.*` / `string.*` / … and native methods.
+- **Completion** — built-ins, `math.*` / `string.*` / …, the 8 C-native
+  methods (`sqrt`, `abs`, `time`, …), `native func` declarations in the open
+  file, and keyword snippets (`native func`, `require ... from builtin`,
+  `var`, `func`, `if`, `while`, `return`, `break`).
 
 Settings:
 

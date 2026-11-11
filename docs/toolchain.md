@@ -51,13 +51,29 @@ overridden with `$LLVM_LINKER`.
 ## CLI
 
 ```
-minilang run <file>          # compile and run .mil, or run .milc
-minilang bytecode <file>     # disassembly
-minilang dump-text <file>   # MINILANGBC text form
-minilang llvm <file>         # emit .ll
-minilang build -b <file>     # write .milc
-minilang build -e <file>     # write native executable
-minilang build -e <file> ext.c  # ... linking a user C extension
-minilang repl                # interactive REPL
-minilang self-test           # self-host check
+minilang run <file>                # compile and run .mil, or run .milc
+minilang run -e <file>.mil ext.c.. # boot VM: compile the .c extension(s), load
+                                   # them and run (see docs/native.md)
+minilang bytecode <file>           # disassembly
+minilang dump-text <file>          # MINILANGBC text form
+minilang llvm <file>               # emit .ll
+minilang build -b <file>           # write .milc
+minilang build -e <file>           # write native executable
+minilang build -e <file> ext.c     # ... linking a user C extension
+minilang build -e --dynamic <file> ext.c   # ... extension as a shared library
+minilang repl                      # interactive REPL
+minilang self-test                 # self-host check
 ```
+
+## Windows
+
+MSVC and MinGW-w64 are both supported: everything branches on `_WIN32`, and
+MSVC builds through CMake (`cmake -B build && cmake --build build`).
+
+* Executable discovery uses `GetModuleFileNameA`, `PATH` splits on `;`, and
+  scratch files go to `%TEMP%` — no `/proc/self/exe`, `/tmp` or `:` separator.
+* `run -e` packs `.c` sources + the generated ABI adapter + `runtime.c` into a
+  `%TEMP%\ml_ext_<pid>.dll` and loads it with `LoadLibrary` (Windows has no
+  `--export-dynamic` for an executable's symbols, so the DLL is self-contained).
+* `build -e --dynamic` emits `<base>_extN.dll` plus an import library; if the
+  linker cannot do import libraries it warns and falls back to static linking.
