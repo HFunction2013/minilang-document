@@ -30,6 +30,10 @@ LSP server (stdio). The extension launches it automatically:
   parameter highlighted.
 - **Document symbols** — outline of the buffer's functions, variables and
   native declarations (breadcrumbs / outline view).
+- **Find references** — lists every whole-word occurrence of the name under
+  the cursor in the current buffer.
+- **Rename** — F2 renames the symbol under the cursor everywhere in the
+  buffer (works on user functions, variables and native declarations).
 
 Settings:
 
