@@ -52,8 +52,9 @@ overridden with `$LLVM_LINKER`.
 
 ```
 minilang run <file>                # compile and run .mil, or run .milc
-minilang run -e <file>.mil ext.c.. # boot VM: compile the .c extension(s), load
-                                   # them and run (see docs/native.md)
+minilang run -e <file>.mil ext.c.. # compile the .c extension(s), load them and run
+                                   # (boot VM and self-hosted `run main.mil run -e`
+                                   # are equivalent; see docs/native.md)
 minilang bytecode <file>           # disassembly
 minilang dump-text <file>          # MINILANGBC text form
 minilang llvm <file>               # emit .ll

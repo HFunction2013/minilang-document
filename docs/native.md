@@ -120,9 +120,12 @@ frame, is `MLValue ml_vm_native_<name>(void *vm, MLValue *args, int argc)`.
 (or scans the source) and bridges between the 32-byte VM `Value` and the
 16-byte runtime `Value` automatically.
 
-> The **self-hosted** interpreter (`minilang run main.mil run ...`) cannot
-> load C extensions; it prints an explicit error and exits with status 1. Use
-> the boot binary (`minilang run -e ...`) or `build -e`.
+> The **self-hosted** interpreter supports `run -e` as well:
+> `minilang run main.mil run -e prog.mil ext.c ... [-- progargs]` compiles the
+> extension to a shared library, dlopens it into the host VM and dispatches
+> the declared natives through the host registry. Arguments after `--` are
+> visible to the program as `argv()`. The two entry points produce identical
+> output.
 
 ### OpaqueType
 
