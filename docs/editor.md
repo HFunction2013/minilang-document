@@ -19,8 +19,17 @@ LSP server (stdio). The extension launches it automatically:
 - **Hover** — docs for built-ins, syslib functions and C-native methods.
 - **Completion** — built-ins, `math.*` / `string.*` / …, the 8 C-native
   methods (`sqrt`, `abs`, `time`, …), `native func` declarations in the open
-  file, and keyword snippets (`native func`, `require ... from builtin`,
-  `var`, `func`, `if`, `while`, `return`, `break`).
+  file, user-declared functions and variables, and keyword snippets
+  (`native func`, `require ... from builtin`, `var`, `func`, `if`, `while`,
+  `return`, `break`).
+- **Goto definition** — jumps to a user `func`/`var`/`native func`
+  declaration in the buffer, or to `syslib/<module>.mil` (and the matching
+  function line) for module-qualified names like `math.min`.
+- **Signature help** — `(` / `,` triggers the parameter list of built-ins,
+  syslib functions, user natives and user functions, with the active
+  parameter highlighted.
+- **Document symbols** — outline of the buffer's functions, variables and
+  native declarations (breadcrumbs / outline view).
 
 Settings:
 
