@@ -6,8 +6,8 @@ minilang is self-hosting: every C source has a minilang implementation.
 
 | Repo | Contents |
 |------|----------|
-| `minilang-boot` | handwritten C: lexer, parser, bytecode compiler, stack VM, LLVM IR generator, milc serializer, native-method registry, CLI |
-| `minilang-compiler` | the minilang sources (`compiler.mil`, `vm.mil`, `llvm_gen.mil`, `milc_io.mil`, `main.mil`) and tests |
+| `minilang-boot` | handwritten C: lexer, parser, bytecode compiler, stack VM, C source generator, milc serializer, native-method registry, CLI |
+| `minilang-compiler` | the minilang sources (`compiler.mil`, `vm.mil`, `milc_io.mil`, `main.mil`) and tests |
 | `minilang-syslib` | standard library (git submodule of both) |
 
 ## Bootstrapping
@@ -35,33 +35,31 @@ diff A' B                                      # must be identical
 
 `./bootstrap_test.sh` automates this.
 
-## LLVM native linking
+## C native build
 
-The native-executable backend uses **LLVM project binaries** (no Python
-llvmlite):
+The native-executable backend emits a **C source file** (`<base>.c`) and
+compiles it with the system C compiler at `-O2`:
 
 ```
-llc -O2 -filetype=obj x.ll -o x.o
-clang -O2 -no-pie x.o runtime.c -o x
+cc -O2 -I<runtime dir> <base>.c runtime.c [prebuilt extensions] -o <bin>
 ```
 
-Tools are resolved via `$LLVM_DIR/bin` first, then `PATH`; the linker can be
-overridden with `$LLVM_LINKER`.
+The compiler driver is resolved from `$CC` (Unix default `cc`, Windows default
+`clang`); no LLVM/llc/llvmlite step is involved.
 
 ## CLI
 
 ```
 minilang run <file>                # compile and run .mil, or run .milc
-minilang run -e <file>.mil ext.c.. # compile the .c extension(s), load them and run
+minilang run -e <file>.mil ext.so  # load a prebuilt shared library and run
                                    # (boot VM and self-hosted `run main.mil run -e`
                                    # are equivalent; see docs/native.md)
 minilang bytecode <file>           # disassembly
 minilang dump-text <file>          # MINILANGBC text form
-minilang llvm <file>               # emit .ll
+minilang c <file>                  # emit C source to <base>.c
 minilang build -b <file>           # write .milc
 minilang build -e <file>           # write native executable
-minilang build -e <file> ext.c     # ... linking a user C extension
-minilang build -e --dynamic <file> ext.c   # ... extension as a shared library
+minilang build -e <file> ext.o     # ... linking a prebuilt object/archive/shared lib
 minilang repl                      # interactive REPL
 minilang self-test                 # self-host check
 ```
@@ -73,8 +71,6 @@ MSVC builds through CMake (`cmake -B build && cmake --build build`).
 
 * Executable discovery uses `GetModuleFileNameA`, `PATH` splits on `;`, and
   scratch files go to `%TEMP%` — no `/proc/self/exe`, `/tmp` or `:` separator.
-* `run -e` packs `.c` sources + the generated ABI adapter + `runtime.c` into a
-  `%TEMP%\ml_ext_<pid>.dll` and loads it with `LoadLibrary` (Windows has no
-  `--export-dynamic` for an executable's symbols, so the DLL is self-contained).
-* `build -e --dynamic` emits `<base>_extN.dll` plus an import library; if the
-  linker cannot do import libraries it warns and falls back to static linking.
+* Extensions are precompiled to a `.dll` (or `.obj`/static archive) yourself;
+  `run -e` loads the DLL with `LoadLibrary`. The toolchain does not bundle
+  `.c` sources into a temporary process DLL.

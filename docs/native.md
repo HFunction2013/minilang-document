@@ -68,40 +68,38 @@ native func my_open(path);     // -> opaque handle
 native func my_read(handle);   // -> int
 ```
 
-There are two ways to supply the C implementation.
+### Precompile first (no on-the-fly C compilation)
 
-### Run straight from source (`run -e`)
-
-The C boot VM compiles the `.c` file, loads it and registers the natives —
-no separate build step:
+The toolchain **never compiles extension C on the fly**. You build the C
+implementation yourself, then pass the resulting artefact to minilang:
 
 ```bash
-minilang run -e prog.mil myext.c -- args...
-minilang run -e prog.mil ext.so -- args...     # prebuilt shared library (.dll on Windows)
+# 1. Precompile your extension (object file for static linking, shared lib for loading)
+cc -O2 -fPIC -I<minilang-boot> -c myext.c -o myext.o
+cc -O2 -fPIC -shared -I<minilang-boot> myext.c -o myext.so   # myext.dll on Windows
+
+# 2a. Load the prebuilt shared library while interpreting
+minilang run -e prog.mil myext.so -- args...
+
+# 2b. Or link a precompiled object/archive/shared library into a native executable
+minilang build -e prog.mil myext.o
 ```
 
-The generated program links `runtime.c` automatically; extra compiler/linker
-flags can be injected with `LLVM_LINKER`.
+Passing a raw `.c` source is rejected: the boot backend reports an error that
+extensions must be precompiled. The `--dynamic` flag is still accepted for
+backwards compatibility but no longer changes the link mode — a prebuilt shared
+library is already dynamic.
 
-### Build a native executable (`build -e`)
+### Calling conventions
 
-```bash
-minilang build -e prog.mil myext.c            # static link (default)
-minilang build -e --dynamic prog.mil myext.c  # extension as a shared library
-```
+There are two C signatures; the loader probes the symbols it finds.
 
-`--dynamic` compiles each `.c` to `<base>_extN.so` (Linux/macOS) or
-`<base>_extN.dll` (Windows, with an import library the executable links
-against) so native code can be swapped without rebuilding the program.
-
-### Calling convention
-
-Implement each function as `Value ml_native_<name>(Value ...)` — base name, no
-module prefix — in the extension C file, including the public API header
+**Packed ABI** (preferred for extensions), base name without module prefix,
+using the public API header
 [`minilang_runtime.h`](https://github.com/HFunction2013/minilang-boot/blob/main/minilang_runtime.h):
 
 ```c
-#include "minilang_runtime.h"   # -I points at the runtime dir automatically
+#include "minilang_runtime.h"   // -I points at the runtime dir automatically
 
 Value ml_native_my_open(Value path) {
     FILE *f = fopen(ml_cstr(path), "r");
@@ -114,18 +112,23 @@ Value ml_native_my_read(Value handle) {
 }
 ```
 
-An alternative signature, used when an extension wants to see the raw VM
-frame, is `MLValue ml_vm_native_<name>(void *vm, MLValue *args, int argc)`.
-`run -e` accepts both: it probes the extension for `ml_vm_native_*` symbols
-(or scans the source) and bridges between the 32-byte VM `Value` and the
-16-byte runtime `Value` automatically.
+**VM-style ABI**, when the extension wants the raw VM frame:
+`MLValue ml_vm_native_<name>(void *vm, MLValue *args, int argc)`.
+
+`run -e` registers `ml_vm_native_*` symbols directly. Packed `ml_native_*`
+symbols are wrapped by an internal trampoline that converts between the 32-byte
+VM `Value` and the 16-byte runtime `Value` automatically.
+
+> Bridge limits: the packed trampoline supports arity **0–3** arguments; calls
+> with more arguments report an error and return nil. Array arguments crossing
+> the ABI boundary are converted best-effort and are **not** deep-converted.
+> Nil, int, string and opaque round-trip reliably.
 
 > The **self-hosted** interpreter supports `run -e` as well:
-> `minilang run main.mil run -e prog.mil ext.c ... [-- progargs]` compiles the
-> extension to a shared library, dlopens it into the host VM and dispatches
-> the declared natives through the host registry. Arguments after `--` are
-> visible to the program as `argv()`. The two entry points produce identical
-> output.
+> `minilang run main.mil run -e prog.mil ext.so ... [-- progargs]` loads the
+> prebuilt library into the host VM and dispatches the declared natives through
+> the host registry. Arguments after `--` are visible to the program as `argv()`.
+> The two entry points produce identical output.
 
 ### OpaqueType
 
@@ -146,10 +149,8 @@ working example.
 
 ### Windows notes
 
-On Windows (MSVC or MinGW-w64), `run -e` packs the `.c` sources, the generated
-ABI adapter and `runtime.c` into a single `%TEMP%\ml_ext_<pid>.dll`, loads it
-with `LoadLibrary` and registers its `dllexport`ed entry points. Bundling
-`runtime.c` keeps the DLL self-contained, because Windows has no
-`--export-dynamic` equivalent for symbols an executable exports. `build -e
---dynamic` writes `<base>_extN.dll` plus an import library; if the linker
-cannot do import libraries it warns and falls back to static linking.
+On Windows (MSVC or MinGW-w64) you precompile the extension into a `.dll` (or
+`.obj`/static archive) yourself, exactly as on Unix. The loader uses
+`LoadLibrary` for the shared library; there is no step that packs `.c` sources
+and `runtime.c` into a temporary process DLL.
+

@@ -1,7 +1,7 @@
 # minilang documentation
 
 Documentation for the **minilang** programming language — a tiny, self-hosting,
-C-like language with a bytecode VM and an LLVM native backend.
+C-like language with a bytecode VM and a C native backend.
 
 This content is licensed under **Creative Commons Attribution-ShareAlike 4.0
 International (CC BY-SA 4.0)**. See the [`LICENSE`](LICENSE) file. Code examples
@@ -14,7 +14,7 @@ may be reused under the same terms.
 | [docs/language.md](docs/language.md) | Syntax, types, operators, statements |
 | [docs/stdlib.md](docs/stdlib.md) | `require` module system and the bundled modules |
 | [docs/native.md](docs/native.md) | C-native methods (`native func ...`) |
-| [docs/toolchain.md](docs/toolchain.md) | Boot compiler, self-hosting, LLVM linking |
+| [docs/toolchain.md](docs/toolchain.md) | Boot compiler, self-hosting, C native build |
 | [docs/editor.md](docs/editor.md) | VS Code extension + language server |
 
 ## The minilang ecosystem
