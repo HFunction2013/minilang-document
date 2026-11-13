@@ -75,11 +75,17 @@ implementation yourself, then pass the resulting artefact to minilang:
 
 ```bash
 # 1. Precompile your extension (object file for static linking, shared lib for loading)
+#    Linux (GCC/Clang):
 cc -O2 -fPIC -I<minilang-boot> -c myext.c -o myext.o
-cc -O2 -fPIC -shared -I<minilang-boot> myext.c -o myext.so   # myext.dll on Windows
+cc -O2 -fPIC -shared -I<minilang-boot> myext.c -o myext.so
+#    macOS (Clang):
+cc -O2 -fPIC -dynamiclib -undefined dynamic_lookup -I<minilang-boot> myext.c -o myext.dylib
+#    Windows (MSVC cl):
+cl /O2 /I<minilang-boot> /c myext.c /Fomyext.o
+cl /O2 /I<minilang-boot> /LD myext.c /Femyext.dll
 
 # 2a. Load the prebuilt shared library while interpreting
-minilang run -e prog.mil myext.so -- args...
+minilang run -e prog.mil myext.so -- args...   # .dylib on macOS, .dll on Windows
 
 # 2b. Or link a precompiled object/archive/shared library into a native executable
 minilang build -e prog.mil myext.o
