@@ -38,14 +38,21 @@ diff A' B                                      # must be identical
 ## C native build
 
 The native-executable backend emits a **C source file** (`<base>.c`) and
-compiles it with the system C compiler at `-O2`:
+compiles it at `-O2` (MSVC: `/O2`) with the system compiler:
 
 ```
+# GCC / Clang / g++ (Unix and Windows clang/MinGW)
 cc -O2 -I<runtime dir> <base>.c runtime.c [prebuilt extensions] -o <bin>
+
+# MSVC (cl.exe)
+cl /O2 /I<runtime dir> <base>.c runtime.c [prebuilt extensions] /Fe<bin>
 ```
 
-The compiler driver is resolved from `$CC` (Unix default `cc`, Windows default
-`clang`); no LLVM/llc/llvmlite step is involved.
+The driver is resolved from `$CC` (Unix default `cc`, Windows default `clang`)
+and classified by basename: `cl`/`cl.exe` selects the MSVC dialect
+(`/O2 /I /Fe`), everything else (`cc`, `gcc`, `g++`, `clang`, `clang++`) uses
+the GCC/Clang dialect. The runtime and generated source are C++-clean so a C++
+driver such as `g++` can build them; no LLVM/llc/llvmlite step is involved.
 
 ## CLI
 
