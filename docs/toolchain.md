@@ -41,18 +41,20 @@ The native-executable backend emits a **C source file** (`<base>.c`) and
 compiles it at `-O2` (MSVC: `/O2`) with the system compiler:
 
 ```
-# GCC / Clang / g++ (Unix and Windows clang/MinGW)
+# GNU / Clang (Unix)
 cc -O2 -I<runtime dir> <base>.c runtime.c [prebuilt extensions] -o <bin>
 
-# MSVC (cl.exe)
+# MSVC (cl.exe, Windows)
 cl /O2 /I<runtime dir> <base>.c runtime.c [prebuilt extensions] /Fe<bin>
 ```
 
-The driver is resolved from `$CC` (Unix default `cc`, Windows default `clang`)
+The driver is resolved from `$CC` (Unix default `cc`, Windows default `cl`)
 and classified by basename: `cl`/`cl.exe` selects the MSVC dialect
-(`/O2 /I /Fe`), everything else (`cc`, `gcc`, `g++`, `clang`, `clang++`) uses
-the GCC/Clang dialect. The runtime and generated source are C++-clean so a C++
-driver such as `g++` can build them; no LLVM/llc/llvmlite step is involved.
+(`/O2 /I /Fe`), everything else (`cc`, `gcc`, `clang`, ...) uses the
+GCC/Clang dialect. CI exercises one backend per platform: GNU gcc on Linux,
+Clang on macOS, MSVC on Windows. The runtime and generated source are
+C++-clean so a C++ driver such as `g++` can also build them; no
+LLVM/llc/llvmlite step is involved.
 
 ## CLI
 
