@@ -50,11 +50,16 @@ cl /O2 /I<runtime dir> <base>.c runtime.c [prebuilt extensions] /Fe<bin>
 
 The driver is resolved from `$CC` (Unix default `cc`, Windows default `cl`)
 and classified by basename: `cl`/`cl.exe` selects the MSVC dialect
-(`/O2 /I /Fe`), everything else (`cc`, `gcc`, `clang`, ...) uses the
-GCC/Clang dialect. CI exercises one backend per platform: GNU gcc on Linux,
-Clang on macOS, MSVC on Windows. The runtime and generated source are
-C++-clean so a C++ driver such as `g++` can also build them; no
-LLVM/llc/llvmlite step is involved.
+(`/O2 /I /Fe`), everything else (`cc`, `gcc`, `g++`, `clang`, `clang++`, ...)
+uses the GCC/Clang dialect. C++ drivers are forced to compile the translation
+unit as C (`-x c`) so the packed ABI stays unmangled. The runtime and generated
+source are C++-clean.
+
+Three driver classes are supported: **MSVC** (`cl`, Windows only), **GCC/G++**
+(`gcc`/`g++`, including versioned aliases such as `g++-15`), and **Clang**
+(`clang`/`clang++`). CI covers the per-OS feasible combinations: Linux
+gcc / g++ / clang, macOS clang / g++-15, Windows cl / clang / MinGW g++.
+MSVC/cl has no macOS or Linux build. No LLVM/llc/llvmlite step is involved.
 
 ## CLI
 
@@ -66,6 +71,8 @@ minilang run -e <file>.mil ext.so  # load a prebuilt shared library and run
 minilang bytecode <file>           # disassembly
 minilang dump-text <file>          # MINILANGBC text form
 minilang c <file>                  # emit C source to <base>.c
+minilang genheader <file>          # emit packed-ABI <base>.h + stub <base>.c for native funcs
+minilang compileheader <file>      # precompile the stub into <base>.<so|dylib|dll>
 minilang build -b <file>           # write .milc
 minilang build -e <file>           # write native executable
 minilang build -e <file> ext.o     # ... linking a prebuilt object/archive/shared lib

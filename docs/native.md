@@ -96,6 +96,31 @@ extensions must be precompiled. The `--dynamic` flag is still accepted for
 backwards compatibility but no longer changes the link mode — a prebuilt shared
 library is already dynamic.
 
+### Scaffold with genheader / compileheader
+
+For a `.mil` library that declares native functions, `genheader` scans every
+`native func` and writes a paired C header (packed-ABI prototypes) and a stub
+source. Each stub entry point matches the packed ABI
+(`Value ml_native_<name>(Value ...)`) and returns `ml_nil()` until you fill it
+in:
+
+```bash
+minilang genheader myext.mil      # -> myext.h, myext.c next to the source
+```
+
+`compileheader` precompiles that stub into a linkable shared library
+(`.so` on Linux, `.dylib` on macOS, `.dll` on Windows), using the driver in
+`$CC` (MSVC / GCC / Clang dialects):
+
+```bash
+minilang compileheader myext.mil  # -> myext.so | myext.dylib | myext.dll
+```
+
+This is an **explicit precompile step only** — the toolchain still never
+compiles extension C at runtime. Edit the generated stub bodies, re-run
+`compileheader`, then load the resulting library with `run -e` or link it into
+a native executable with `build -e`.
+
 ### Calling conventions
 
 There are two C signatures; the loader probes the symbols it finds.
