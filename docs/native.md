@@ -180,8 +180,9 @@ working example.
 
 ### Windows notes
 
-On Windows (MSVC or MinGW-w64) you precompile the extension into a `.dll` (or
-`.obj`/static archive) yourself, exactly as on Unix. The loader uses
-`LoadLibrary` for the shared library; there is no step that packs `.c` sources
-and `runtime.c` into a temporary process DLL.
+On Windows you precompile the extension into a `.dll` (or `.obj`/static
+archive) yourself, exactly as on Unix. The loader uses `LoadLibrary` for the
+shared library; there is no step that packs `.c` sources and `runtime.c` into a
+temporary process DLL. MSVC (`cl`) and the MSVC-ABI `clang` are covered in CI;
+MinGW-w64 g++ extension linking is pending a host-import-library build step.
 
