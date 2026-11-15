@@ -58,10 +58,11 @@ source are C++-clean.
 Three driver classes are supported: **MSVC** (`cl`, Windows only), **GCC/G++**
 (`gcc`/`g++`, including versioned aliases such as `g++-15`), and **Clang**
 (`clang`/`clang++`). CI covers the per-OS feasible combinations: Linux
-gcc / g++ / clang, macOS clang / g++-15, Windows cl / clang / MinGW g++. The
-boot executable itself is built by the VS generator and emits `minilang.lib`;
-the MinGW extension DLL links that import library. MSVC/cl has no macOS or
-Linux build. No LLVM/llc/llvmlite step is involved.
+gcc / g++ / clang, macOS clang / g++-15, Windows cl / clang (MSVC ABI).
+MinGW g++ on Windows is deferred: the VS-built host exe emits an MSVC `.lib`
+that MinGW ld cannot consume; a MinGW-built host exe with a GNU import library
+(`libminilang.dll.a`) is required. MSVC/cl has no macOS or Linux build. No
+LLVM/llc/llvmlite step is involved.
 
 ## CLI
 

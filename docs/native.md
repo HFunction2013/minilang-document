@@ -183,7 +183,7 @@ working example.
 On Windows you precompile the extension into a `.dll` (or `.obj`/static
 archive) yourself, exactly as on Unix. The loader uses `LoadLibrary` for the
 shared library; there is no step that packs `.c` sources and `runtime.c` into a
-temporary process DLL. MSVC (`cl`), the MSVC-ABI `clang`, and MinGW-w64 g++
-are covered in CI; the MinGW extension DLL links the boot exe's import library
-(`minilang.lib`).
+temporary process DLL. MSVC (`cl`) and the MSVC-ABI `clang` are covered in CI;
+MinGW-w64 g++ extension linking is deferred pending a MinGW-built host import
+library.
 
