@@ -58,11 +58,12 @@ source are C++-clean.
 Three driver classes are supported: **MSVC** (`cl`, Windows only), **GCC/G++**
 (`gcc`/`g++`, including versioned aliases such as `g++-15`), and **Clang**
 (`clang`/`clang++`). CI covers the per-OS feasible combinations: Linux
-gcc / g++ / clang, macOS clang / g++-15, Windows cl / clang (MSVC ABI).
-MinGW g++ on Windows is deferred: the VS-built host exe emits an MSVC `.lib`
-that MinGW ld cannot consume; a MinGW-built host exe with a GNU import library
-(`libminilang.dll.a`) is required. MSVC/cl has no macOS or Linux build. No
-LLVM/llc/llvmlite step is involved.
+gcc / g++ / clang, macOS clang / g++-15, Windows cl / clang (MSVC ABI) and
+MinGW g++. The MinGW g++ job builds the boot host with the MinGW/Ninja
+toolchain, which exports all host symbols and emits a GNU import library
+(`libminilang.dll.a`) for the prebuilt extension DLL; the cl/clang jobs keep
+the VS generator and its MSVC `minilang.lib`. MSVC/cl has no macOS or Linux
+build. No LLVM/llc/llvmlite step is involved.
 
 ## CLI
 
@@ -85,8 +86,12 @@ minilang self-test                 # self-host check
 
 ## Windows
 
-MSVC and MinGW-w64 are both supported: everything branches on `_WIN32`, and
-MSVC builds through CMake (`cmake -B build && cmake --build build`).
+MSVC and MinGW-w64 are both supported: everything branches on `_WIN32`.
+MSVC/clang build the host through CMake with the VS generator
+(`cmake -B build && cmake --build build --config Release`); the MinGW g++ job
+configures CMake with the Ninja generator and gcc, linking
+`--export-all-symbols --out-implib=libminilang.dll.a` so MinGW extension DLLs
+can consume a GNU import library.
 
 * Executable discovery uses `GetModuleFileNameA`, `PATH` splits on `;`, and
   scratch files go to `%TEMP%` — no `/proc/self/exe`, `/tmp` or `:` separator.
