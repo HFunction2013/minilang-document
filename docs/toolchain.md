@@ -48,6 +48,20 @@ Set `MINILANG_PREFIX` to change the prefix. The installer appends
 `$PREFIX/bin` to your shell profile (Unix) or user `PATH` (Windows); reopen
 the terminal afterward.
 
+### Source fetch fallback
+
+When run inside a checkout the installer reuses the local sources. Otherwise it
+fetches them into a temporary work dir:
+
+- with `git`: shallow clone `MINILANG_BRANCH` (default `main`); an empty branch
+  clones the remote HEAD.
+- without `git`: downloads the codeload archive (`tar.gz` on Unix, `.zip` on
+  Windows) for that ref and extracts it. Set `MINILANG_NO_GIT=1` to force the
+  archive route even when git is present.
+
+Archive downloads use `curl`/`wget` (Unix) or the PowerShell web cmdlets; an
+empty branch with no git is rejected, because the archive needs a concrete ref.
+
 ## Bootstrapping
 
 ```bash
