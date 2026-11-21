@@ -10,6 +10,44 @@ minilang is self-hosting: every C source has a minilang implementation.
 | `minilang-compiler` | the minilang sources (`compiler.mil`, `vm.mil`, `milc_io.mil`, `main.mil`) and tests |
 | `minilang-syslib` | standard library (git submodule of both) |
 
+## Install
+
+Each repo ships an installer under `scripts/` that fetches the sources,
+compiles on site, lays down a user prefix, adds `bin` to `PATH`, and runs the
+relevant test suite.
+
+Unix (Linux / macOS):
+
+```bash
+git clone https://github.com/HFunction2013/minilang-compiler
+cd minilang-compiler
+bash scripts/install.sh          # full toolchain + documentation; prefix ~/.local
+```
+
+Windows (PowerShell):
+
+```powershell
+git clone https://github.com/HFunction2013/minilang-compiler
+cd minilang-compiler
+.\scripts\install.ps1            # prefix %LOCALAPPDATA%\Programs\minilang
+```
+
+The `minilang-boot` installer (`scripts/install.sh` / `install.ps1`) installs
+only the boot VM, C runtime, headers and standard library.
+
+Installed layout under `$PREFIX` (default `~/.local`; Windows
+`%LOCALAPPDATA%\Programs\minilang`):
+
+- `bin/minilang` (or `bin\minilang.cmd`) — wrapper put on `PATH`
+- `lib/minilang/bin/minilang(.exe)` — boot binary
+- `lib/minilang/` — runtime C sources/headers, self-hosted `.mil` sources,
+  `syslib/`
+- `share/doc/minilang/docs/` — user documentation
+
+Set `MINILANG_PREFIX` to change the prefix. The installer appends
+`$PREFIX/bin` to your shell profile (Unix) or user `PATH` (Windows); reopen
+the terminal afterward.
+
 ## Bootstrapping
 
 ```bash
