@@ -6,7 +6,7 @@
 
 - Syntax highlighting for `.mil`
 - A custom `.milc` bytecode viewer (Text Bytecode / Bytecode Assembly)
-- Commands: run in terminal, REPL, bytecode, dump-text, LLVM IR, build -b/-e
+- Commands: run in terminal, REPL, bytecode, dump-text, generate C source, build -b/-e
 - Settings: `minilang.path` (path to the `minilang` binary), `minilang.workingDirectory`
 
 ## Language server
